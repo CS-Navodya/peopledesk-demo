@@ -1,0 +1,16 @@
+{
+  "name": "peopledesk-demo",
+  "version": "1.0.0",
+  "description": "TRAINING DEMO ONLY. Intentionally flawed sample app used for a live security/privacy teardown. No real data. Do not copy these patterns into real projects.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "lodash": "4.17.15",
+    "axios": "0.21.0"
+  }
+}
