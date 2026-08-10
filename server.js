@@ -59,6 +59,7 @@ app.get('/api/_debug/lodash-version', (req, res) => {
   res.json({ version: _.VERSION });
 });
 
+// Used by uptime checks and the CI smoke test (test.js) to confirm the server booted.
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 const PORT = process.env.PORT || 3000;
