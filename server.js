@@ -36,6 +36,7 @@ app.post('/api/tickets', (req, res) => {
   const { name, email, phone, issue, notes } = req.body;
   // TRAINING-FLAW #6: no input validation or sanitization at all.
   const ticket = { id: nextId++, name, email, phone, issue, notes };
+  console.log("tickets: ", tickets);
   tickets.push(ticket);
   res.status(201).json(ticket);
 });
