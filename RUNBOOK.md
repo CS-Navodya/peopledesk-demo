@@ -49,9 +49,12 @@ Keep one browser tab per stop, pre-opened, so you're never typing a URL live.
    number out loud. This is the moment that lands hardest for a non-technical
    audience — they don't need to understand code to understand "I just saw
    someone's phone number with zero login."
-5. **(60s) Logs.** Show the `console.log` line in `server.js`, then (if you set up
-   a terminal/log view) a real login attempt appearing in plaintext in the server
-   log, password included.
+5. **(60s) Logs.** Show the `console.log` line in `server.js`, then switch to the
+   pre-opened Vercel dashboard's **Logs** tab for this project and log in on the
+   live site — the `Login attempt -> username: admin, password: ...` line
+   appears there in real time, password included. (Vercel logs aren't a local
+   terminal — they only show up in the dashboard/`vercel logs` CLI, so open
+   that tab ahead of time rather than trying to find it live.)
 6. **(60s) Tie it back.** Overlay each thing you just showed against the
    consequences slide that follows: the unreviewed merge, the exposed endpoint, the
    logged password, the outdated dependency — each maps to a real audit finding
