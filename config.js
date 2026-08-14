@@ -1,24 +1,24 @@
 // ============================================================================
-// TRAINING-FLAW #1: secrets hardcoded directly in source and committed to git,
-// instead of environment variables / a secrets manager.
+// FIXED (Day 3): secrets no longer live in source. They're read from
+// environment variables instead, following the pattern GitHub's own
+// remediation guidance recommends after a push-protection / secret-scanning
+// hit. See .env.example for the variable names — copy it to .env locally
+// (already gitignored) and fill in real values, or set them in your host's
+// dashboard (e.g. Render's Environment tab) for a deployed instance.
 //
-// This file is committed ON PURPOSE so the live demo can show GitHub Secret
-// Scanning + Push Protection actually catching it in real time. Every value
-// below is FAKE — none of these are live credentials for any real service.
-//
-// Do not copy this pattern into a real project.
+// The original commit that hardcoded these (see git history / the
+// push-protection alert) is left in place on purpose — that's the "before"
+// half of this demo. This file is the "after."
 // ============================================================================
 
 module.exports = {
-  // TRAINING-FLAW #2: plaintext password, no hashing (bcrypt/argon2), no salt.
-  ADMIN_PASSWORD: "SuperSecret123!",
+  // TRAINING-FLAW #2 still applies even after rotation: this is a plaintext
+  // comparison, no hashing (bcrypt/argon2), no salt. Moving the value out of
+  // source fixes the "secret in git" problem, not the "plaintext password"
+  // problem — that's a separate, deeper fix.
+  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
 
-  // Fake Slack incoming-webhook URL. Matches the structural pattern GitHub's
-  // secret scanning / push protection looks for. Not a real webhook.
-  SLACK_WEBHOOK_URL: "https://hooks.slack.com/services/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",
+  SLACK_WEBHOOK_URL: process.env.SLACK_WEBHOOK_URL,
 
-  // Fake AWS-style access key ID. Structurally valid format, not a live key.
-  // Kept as a backup trigger in case the Slack pattern above doesn't fire in
-  // your GitHub plan/region on the day you test this.
-  AWS_ACCESS_KEY_ID: "AKIAZQ3XJK7LPMND2Q8H",
+  AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
 };

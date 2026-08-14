@@ -40,14 +40,23 @@ it still fails after that, the printed server output will show the actual error.
 
 ```bash
 cd peopledesk-demo
+cp .env.example .env     # then fill in ADMIN_PASSWORD (see .env.example)
 npm install
 npm test        # should print "Smoke test passed"
 node server.js  # visit http://localhost:3000
 ```
 
 Confirm you can see the ticket list with no login, and that submitting the login
-form with the wrong password fails and the right one (`admin` / `SuperSecret123!`)
-succeeds.
+form with the wrong password fails and the right one (whatever you set
+`ADMIN_PASSWORD` to in `.env`) succeeds.
+
+**Note on the secret rotation (Day 3 fix):** `config.js` used to hardcode the
+admin password and two fake secrets directly in source — that's what triggered
+push protection in section 2 below. It's since been rotated to read from
+environment variables instead (see `.env.example`). The original hardcoded
+commit is still in git history on purpose; that's the "before" this fix is
+"after." If you're deploying to Render, set these same variables in the
+service's **Environment** tab.
 
 ## 2. Create the real GitHub repo
 
