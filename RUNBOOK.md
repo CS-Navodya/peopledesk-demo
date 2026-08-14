@@ -17,7 +17,7 @@ for real instead of mocking it.
 **Day 2 — let the automated signals land**
 - Check the Security tab for the Dependabot alert on `lodash`. Screenshot it.
 - Check the Actions tab for a green CI run. Screenshot it.
-- If you're deploying live: connect Render, deploy, confirm the public URL works,
+- If you're deploying live: connect Vercel, deploy, confirm the public URL works,
   screenshot the build log.
 
 **Day 3 (or any day before) — add the "after"**
@@ -29,7 +29,7 @@ for real instead of mocking it.
 
 **1–2 days before the session**
 - Full dry run of the live click-path below, timed.
-- Re-check Render is awake-able (see README) and that the URL still responds.
+- Re-check the Vercel URL still responds (see README) and warm it up before your slot.
 - Export every screenshot into one folder in click-order as your fallback deck.
 
 ## Live segment script (5–10 minutes)
@@ -44,7 +44,7 @@ Keep one browser tab per stop, pre-opened, so you're never typing a URL live.
 3. **(60s) Security tab.** Point at the Dependabot alert on the old `lodash`
    version and the secret-scanning alert (or the blocked-push screenshot if that's
    what fired). "This isn't hypothetical — GitHub caught this the moment I pushed."
-4. **(60s) The app itself.** Open the live URL (or localhost if you skipped Render),
+4. **(60s) The app itself.** Open the live URL (or localhost if you skipped Vercel),
    hit `/api/tickets` directly with no login, and read a customer's name and phone
    number out loud. This is the moment that lands hardest for a non-technical
    audience — they don't need to understand code to understand "I just saw
@@ -61,7 +61,7 @@ Keep one browser tab per stop, pre-opened, so you're never typing a URL live.
 ## If live breaks
 
 Company-wide audience, once chance — don't gamble on live wifi or a cold-started
-Render instance. Have the screenshot folder from your dry run ready as a second
+Vercel function. Have the screenshot folder from your dry run ready as a second
 tab/backup slide, and say out loud "here's what this looked like when I tested it
 Tuesday" if anything doesn't cooperate live. Nobody will think less of you for that
 — they'll think less of you for dead air.

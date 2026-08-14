@@ -55,8 +55,8 @@ admin password and two fake secrets directly in source — that's what triggered
 push protection in section 2 below. It's since been rotated to read from
 environment variables instead (see `.env.example`). The original hardcoded
 commit is still in git history on purpose; that's the "before" this fix is
-"after." If you're deploying to Render, set these same variables in the
-service's **Environment** tab.
+"after." If you're deploying to Vercel, set these same variables in the
+project's **Settings → Environment Variables**.
 
 ## 2. Create the real GitHub repo
 
@@ -117,19 +117,29 @@ this is what you show for "real deploy/build logs," no staging needed.
 
 ## 6. Deploy it live (optional but you asked for both)
 
-Using [Render](https://render.com) (free plan, no credit card required historically —
-confirm this hasn't changed when you sign up):
+Using [Vercel](https://vercel.com) (Hobby plan — free, no credit card):
 
-1. New → Web Service → connect your GitHub repo.
-2. Render should auto-detect `render.yaml`. If not, set build command `npm install`
-   and start command `node server.js`.
-3. Deploy. You'll get a real public URL and a real, live build/deploy log in
-   Render's dashboard — this is what you show for "here's what a deployment
+1. New Project → import the GitHub repo.
+2. Vercel picks up `vercel.json` and `api/index.js` automatically — the Express
+   app (`server.js`) runs as a serverless function; no build command needed.
+3. Before your first deploy (or right after, then redeploy), add the same three
+   environment variables from `.env.example` under **Settings → Environment
+   Variables**: `ADMIN_PASSWORD`, `SLACK_WEBHOOK_URL`, `AWS_ACCESS_KEY_ID`.
+   Without these, login always fails on the deployed instance.
+4. Deploy. You'll get a real public URL and a real, live build/deploy log in
+   Vercel's dashboard — this is what you show for "here's what a deployment
    pipeline actually looks like."
 
-**Wake it up 10–15 minutes before your slot** — Render's free tier sleeps after
-inactivity and the first request after sleep can take 30–60 seconds, which is a bad
-look live.
+**Note on the in-memory ticket list:** because this runs as a serverless
+function rather than one long-lived process, a ticket submitted through the
+form may not persist to the next request the way it does locally or on a
+traditional host. The live demo script only ever *reads* `/api/tickets`
+(never submits one live), so this doesn't affect the planned walkthrough —
+just don't improvise a "submit a ticket" moment on stage.
+
+Vercel's free functions also cold-start after inactivity, though typically
+faster than a sleeping free-tier server elsewhere — still worth opening the
+URL a few minutes before your slot to warm it up.
 
 ## Safety notes
 

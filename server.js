@@ -63,5 +63,13 @@ app.get('/api/_debug/lodash-version', (req, res) => {
 // Used by uptime checks and the CI smoke test (test.js) to confirm the server booted.
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`PeopleDesk demo listening on port ${PORT}`));
+// Vercel imports this file as a serverless function (see api/index.js) and
+// calls the exported app directly — it never runs this file as a standalone
+// process, so app.listen() only happens for local runs / Render / the CI
+// smoke test in test.js, all of which do `node server.js` directly.
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => console.log(`PeopleDesk demo listening on port ${PORT}`));
+}
+
+module.exports = app;
