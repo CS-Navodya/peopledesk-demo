@@ -14,52 +14,103 @@
   input, button { padding: 8px; font-size: 14px; }
   button { cursor: pointer; }
   section { margin-top: 36px; }
+  .hidden { display: none; }
+  .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; }
+  .toolbar p { margin: 0; font-size: 14px; color: #444; }
 </style>
 </head>
 <body>
   <h1>PeopleDesk</h1>
   <div class="banner">Training demo only — intentionally insecure, no real customer data. See README.md.</div>
 
-  <section>
-    <h2>Support tickets</h2>
-    <p>Note: this list loads with no login required.</p>
-    <table id="ticketTable">
-      <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Issue</th><th>Notes</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </section>
-
-  <section>
-    <h2>New ticket</h2>
-    <form id="ticketForm">
-      <input name="name" placeholder="Full name" required />
-      <input name="email" placeholder="Email" required />
-      <input name="phone" placeholder="Phone" />
-      <input name="issue" placeholder="Issue" required />
-      <input name="notes" placeholder="Notes" />
-      <button type="submit">Submit ticket</button>
-    </form>
-  </section>
-
-  <section>
+  <section id="loginSection">
     <h2>Admin login</h2>
+    <p>Sign in to view support tickets. Username is <code>admin</code>.</p>
     <form id="loginForm">
-      <input name="username" placeholder="Username" />
-      <input name="password" type="password" placeholder="Password" />
+      <input name="username" placeholder="Username" autocomplete="username" />
+      <input name="password" type="password" placeholder="Password" autocomplete="current-password" />
       <button type="submit">Log in</button>
     </form>
     <p id="loginResult"></p>
   </section>
 
+  <div id="appSection" class="hidden">
+    <div class="toolbar">
+      <p>Signed in as admin.</p>
+      <button type="button" id="logoutBtn">Log out</button>
+    </div>
+
+    <section>
+      <h2>Support tickets</h2>
+      <p>This list is only returned after a successful login.</p>
+      <table id="ticketTable">
+        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Issue</th><th>Notes</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>New ticket</h2>
+      <form id="ticketForm">
+        <input name="name" placeholder="Full name" required />
+        <input name="email" placeholder="Email" required />
+        <input name="phone" placeholder="Phone" />
+        <input name="issue" placeholder="Issue" required />
+        <input name="notes" placeholder="Notes" />
+        <button type="submit">Submit ticket</button>
+      </form>
+    </section>
+  </div>
+
 <script>
+const TOKEN_KEY = 'peopledesk-token';
+
+function getToken() {
+  return sessionStorage.getItem(TOKEN_KEY);
+}
+
+function authHeaders(extra) {
+  return Object.assign({
+    'Authorization': 'Bearer ' + getToken(),
+  }, extra || {});
+}
+
+function showLoggedIn() {
+  document.getElementById('loginSection').classList.add('hidden');
+  document.getElementById('appSection').classList.remove('hidden');
+}
+
+function showLoggedOut() {
+  sessionStorage.removeItem(TOKEN_KEY);
+  document.getElementById('appSection').classList.add('hidden');
+  document.getElementById('loginSection').classList.remove('hidden');
+  document.querySelector('#ticketTable tbody').innerHTML = '';
+  document.getElementById('loginResult').textContent = '';
+}
+
+function addCell(tr, value) {
+  const td = document.createElement('td');
+  td.textContent = value == null ? '' : String(value);
+  tr.appendChild(td);
+}
+
 async function loadTickets() {
-  const res = await fetch('/api/tickets');
+  const res = await fetch('/api/tickets', { headers: authHeaders() });
+  if (res.status === 401) {
+    showLoggedOut();
+    document.getElementById('loginResult').textContent = 'Session expired. Please log in again.';
+    return;
+  }
   const tickets = await res.json();
   const tbody = document.querySelector('#ticketTable tbody');
   tbody.innerHTML = '';
   for (const t of tickets) {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${t.name}</td><td>${t.email}</td><td>${t.phone||''}</td><td>${t.issue}</td><td>${t.notes||''}</td>`;
+    addCell(tr, t.name);
+    addCell(tr, t.email);
+    addCell(tr, t.phone);
+    addCell(tr, t.issue);
+    addCell(tr, t.notes);
     tbody.appendChild(tr);
   }
 }
@@ -67,7 +118,15 @@ async function loadTickets() {
 document.getElementById('ticketForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const data = Object.fromEntries(new FormData(e.target).entries());
-  await fetch('/api/tickets', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+  const res = await fetch('/api/tickets', {
+    method: 'POST',
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(data),
+  });
+  if (res.status === 401) {
+    showLoggedOut();
+    return;
+  }
   e.target.reset();
   loadTickets();
 });
@@ -75,12 +134,30 @@ document.getElementById('ticketForm').addEventListener('submit', async (e) => {
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const data = Object.fromEntries(new FormData(e.target).entries());
-  const res = await fetch('/api/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+  const res = await fetch('/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
   const body = await res.json();
-  document.getElementById('loginResult').textContent = body.ok ? 'Logged in.' : 'Login failed.';
+  if (!body.ok || !body.token) {
+    document.getElementById('loginResult').textContent = 'Login failed.';
+    return;
+  }
+  sessionStorage.setItem(TOKEN_KEY, body.token);
+  document.getElementById('loginResult').textContent = '';
+  showLoggedIn();
+  loadTickets();
 });
 
-loadTickets();
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  showLoggedOut();
+});
+
+if (getToken()) {
+  showLoggedIn();
+  loadTickets();
+}
 </script>
 </body>
 </html>

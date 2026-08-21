@@ -16,7 +16,7 @@ immediately and there's plenty of runway to fix it before the session.
 
 | Flaw | Where | Maps to |
 |---|---|---|
-| No auth on `/api/tickets` — anyone can read every customer's PII | `server.js` | Slide 5, "who can touch it" |
+| Tickets require login — `/api/tickets` returns 401 without a Bearer token | `server.js` / `public/index.html` | Data is hidden until admin signs in |
 | Plaintext password, no hashing | `config.js` / `server.js` login | Slide 5, "who can touch it" |
 | Hardcoded secrets committed to git (fake Slack webhook + AWS key) | `config.js` | Slide 5, "what the contract says" / proof-not-promises |
 | Outdated dependency with a known CVE (`lodash@4.17.15`) | `package.json` | Slide 5, "proof, not promises" — this is what a real Dependabot alert looks like |
@@ -46,9 +46,10 @@ npm test        # should print "Smoke test passed"
 node server.js  # visit http://localhost:3000
 ```
 
-Confirm you can see the ticket list with no login, and that submitting the login
-form with the wrong password fails and the right one (whatever you set
-`ADMIN_PASSWORD` to in `.env`) succeeds.
+Confirm the ticket list is hidden until you log in as `admin` with
+`ADMIN_PASSWORD` from `.env`, that the wrong password fails, and that the
+list appears only after a successful login. A request to `/api/tickets`
+without an `Authorization` header should return 401.
 
 **Note on the secret rotation (Day 3 fix):** `config.js` used to hardcode the
 admin password and two fake secrets directly in source — that's what triggered
