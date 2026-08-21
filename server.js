@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -5,6 +6,42 @@ const _ = require('lodash'); // TRAINING-FLAW #3: pinned to an old, vulnerable v
 const config = require('./config');
 
 const app = express();
+
+function signToken() {
+  const payload = Buffer.from(JSON.stringify({
+    u: 'admin',
+    exp: Date.now() + 8 * 60 * 60 * 1000,
+  })).toString('base64url');
+  const secret = config.ADMIN_PASSWORD || 'demo-session';
+  const sig = crypto.createHmac('sha256', secret).update(payload).digest('base64url');
+  return `${payload}.${sig}`;
+}
+
+function verifyToken(token) {
+  if (!token || typeof token !== 'string' || !token.includes('.')) return false;
+  const [payload, sig] = token.split('.');
+  if (!payload || !sig) return false;
+  const secret = config.ADMIN_PASSWORD || 'demo-session';
+  const expected = crypto.createHmac('sha256', secret).update(payload).digest('base64url');
+  const a = Buffer.from(sig);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return false;
+  try {
+    const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    return data.exp > Date.now();
+  } catch {
+    return false;
+  }
+}
+
+function requireAuth(req, res, next) {
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : '';
+  if (!verifyToken(token)) {
+    return res.status(401).json({ error: 'Login required' });
+  }
+  next();
+}
 
 // TRAINING-FLAW #4: wide-open CORS. Any website on the internet can call this API
 // from a user's browser. A real app would allow-list known origins only.
@@ -22,17 +59,11 @@ let tickets = [
 ];
 let nextId = 4;
 
-// ----------------------------------------------------------------------------
-// TRAINING-FLAW #5 (the headline one): NO authentication or authorization on
-// this route. Anyone who has the URL can read every customer's name, email,
-// phone number, and support notes. This is the single most important flaw
-// to show live — it's the "who can touch it" slide, made real.
-// ----------------------------------------------------------------------------
-app.get('/api/tickets', (req, res) => {
+app.get('/api/tickets', requireAuth, (req, res) => {
   res.json(tickets);
 });
 
-app.post('/api/tickets', (req, res) => {
+app.post('/api/tickets', requireAuth, (req, res) => {
   const { name, email, phone, issue, notes } = req.body;
   // TRAINING-FLAW #6: no input validation or sanitization at all.
   const ticket = { id: nextId++, name, email, phone, issue, notes };
@@ -48,8 +79,8 @@ app.post('/api/login', (req, res) => {
   // has everyone's password too.
   console.log(`Login attempt -> username: ${username}, password: ${password}`);
 
-  if (username === 'admin' && password === config.ADMIN_PASSWORD) {
-    return res.json({ ok: true, token: 'not-a-real-session-token' });
+  if (username === 'admin' && password && password === config.ADMIN_PASSWORD) {
+    return res.json({ ok: true, token: signToken() });
   }
   res.status(401).json({ ok: false });
 });
