@@ -92,6 +92,7 @@ app.get('/api/_debug/lodash-version', (req, res) => {
 });
 
 // Used by uptime checks and the CI smoke test (test.js) to confirm the server booted.
+// Dummy change for a PR that shows the required CI status check.
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 // Vercel imports this file as a serverless function (see api/index.js) and
