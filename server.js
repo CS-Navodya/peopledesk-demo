@@ -17,6 +17,8 @@ function signToken() {
   return `${payload}.${sig}`;
 }
 
+// status check
+
 function verifyToken(token) {
   if (!token || typeof token !== 'string' || !token.includes('.')) return false;
   const [payload, sig] = token.split('.');
